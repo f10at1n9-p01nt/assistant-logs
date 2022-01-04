@@ -3,6 +3,9 @@ import requests, re
 import numpy as np
 import pandas as pd
 
+from googleapiclient.discovery import build
+from google.oauth2 import service_account
+
 
 PAGE = "https://artofproblemsolving.com/classroom/message-lookup?user=jfva&room-id=2974a"
 
@@ -37,6 +40,23 @@ params = (
 )
 
 response = requests.get('https://artofproblemsolving.com/classroom/message-lookup', headers=headers, params=params)
+
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+SERVICE_ACCOUNT_FILE = 'key.json'
+
+credentials = None
+credentials = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+
+SPREADSHEET_ID = '1rXesuUIA0rBsPdQKAeKcnZ06KaTmprNjgJNvzywprjM'
+
+service = build('sheets', 'v4', credentials=credentials)
+
+sheet = service.spreadsheets()
+result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A1:B1").execute()
+
+values = result.get('values', [])
+print(values)
 
 # All of the parsers seem to work fine
 
@@ -78,11 +98,11 @@ for content in chat_data:
 
 pd_array = pd.DataFrame(my_data, columns = ['Date','Time','Sender', 'Symbol', 'Recipient', 'Message'])
 new_df = pd_array.drop(columns=["Symbol"], axis=1)
-print(pd_array)
-print(new_df)
-new_df = new_df.convert_dtypes()
-pd.to_datetime(new_df)
-print(new_df.dtypes)
+# print(pd_array)
+# print(new_df)
+# new_df = new_df.convert_dtypes()
+# pd.to_datetime(new_df)
+# print(new_df.dtypes)
 
 # print(chat_data[3].split())
 # test_list = chat_data[3].split()[5:]
