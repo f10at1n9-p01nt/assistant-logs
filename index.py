@@ -34,6 +34,29 @@ headers = {
     'cookie': '_gcl_au=1.1.594114032.1633912015; _fbp=fb.1.1633912015174.29103382; _hjid=29152329-3fc4-4514-8cb0-d959ec7b292f; _ga_RVQHGWMEXD=GS1.1.1636407150.2.0.1636407193.0; _hjSessionUser_774800=eyJpZCI6IjdlYzFkNGU5LWU4Y2ItNTliYS05MmJiLTUyNmQ4NjQyZjFiNCIsImNyZWF0ZWQiOjE2MzcxNTU2OTg5NjEsImV4aXN0aW5nIjp0cnVlfQ==; _gaexp=GAX1.2.dxfxXNRDRY28Y3y4TyuTxQ.19048.0; timezone=eastern; _gid=GA1.2.1947076679.1641213676; _hjSession_774800=eyJpZCI6Ijk5MzM1ZTU3LWMzZjYtNGM2OC1iZTdlLTJiNmJlMGQ4MzAxZSIsImNyZWF0ZWQiOjE2NDEyMTM2NzY5MTJ9; _hjAbsoluteSessionInProgress=1; _clck=19m46uv|1|ext|0; dash_init_time=1641213792; aopssid=HyOMqArubTAw16412138044484rcdnxyNFNmYl; aopsuid=595181; auid=595181; alogin=s3mei8; grid_init_time=1641221556; crypt_init_time=1641222715; xo_init_time=1641224548; _hjIncludedInSessionSample=1; _uetsid=719555506c9211eca3d481caf525fa95; _uetvid=effda9d02a2911ecadfef98d973e40b0; _ga_NVWC1BELMR=GS1.1.1641219343.330.1.1641226661.60; _ga=GA1.2.1884021289.1633912015; _clsk=ca6z2f|1641226661982|76|1|d.clarity.ms/collect',
 }
 
+
+def get_username_and_class_id():
+  '''Retrieves username and class ID from Google sheet.'''
+
+  SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+  SERVICE_ACCOUNT_FILE = 'key.json'
+
+  credentials = None
+  credentials = service_account.Credentials.from_service_account_file(
+          SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+
+  SPREADSHEET_ID = '1rXesuUIA0rBsPdQKAeKcnZ06KaTmprNjgJNvzywprjM'
+
+  service = build('sheets', 'v4', credentials=credentials)
+
+  sheet = service.spreadsheets()
+  result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A1:B2").execute()
+
+  values = result.get('values', [])
+
+  return values
+
+
 def get_html(site, headers, assistant, id):
   '''
   Returns text and url paramenters (username, room-id) (dict)
@@ -75,36 +98,14 @@ def clean_html(scrape_info):
 
   return new_df
 
+assistant_data = get_username_and_class_id()
+username = assistant_data[1][0]
+class_id = assistant_data[1][1]
 
-site_scrape = get_html(site, headers, 'fig13', '2947')
+site_scrape = get_html(site, headers, username, class_id)
 cleaned_content = clean_html(site_scrape)
 print(cleaned_content)
 
-
-
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SERVICE_ACCOUNT_FILE = 'key.json'
-
-credentials = None
-credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-
-SPREADSHEET_ID = '1rXesuUIA0rBsPdQKAeKcnZ06KaTmprNjgJNvzywprjM'
-
-service = build('sheets', 'v4', credentials=credentials)
-
-sheet = service.spreadsheets()
-result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Sheet1!A1:B2").execute()
-
-values = result.get('values', [])
-# print(values)
-
-# All of the parsers seem to work fine
-
-# soup = bs(response.text, 'html5lib')
-# soup = bs(response.text, 'html.parser')
-# soup = bs(response.text, 'lxml')
-# chat_content = soup.find(id='main-column')
 
 # print(chat_content.prettify())
 
